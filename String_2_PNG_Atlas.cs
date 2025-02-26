@@ -16,7 +16,7 @@ namespace String_to_png_to_atlas
             Color textColor = Color.White;
             SolidBrush textBrush = new SolidBrush(textColor);
 
-            float fontSize = 10.0f;
+            float fontSize = 60.0f;
             Font ourFont = new Font("Ariel", fontSize, FontStyle.Bold, GraphicsUnit.Point);
             StringFormat strAlignment = new StringFormat();
             strAlignment.LineAlignment = StringAlignment.Center;
@@ -84,11 +84,21 @@ namespace String_to_png_to_atlas
                         Bitmap bmp = new Bitmap(imageHW, imageHW);
                         Image img = Image.FromHbitmap(bmp.GetHbitmap());
 
+                        float xScaleFactor = .25f;
+                        float yScaleFactor = .25f;
+
                         //Gets our graphics objext
                         Graphics g = Graphics.FromImage(img);
                         g.Clear(bgColor);
-                        
-                        g.DrawString(doc, ourFont, textBrush, (float)imageHW / 2, (float)imageHW / 2, strAlignment);
+
+                        //Translates the image
+                        g.TranslateTransform(imageHW / 2 , imageHW / 2);
+
+                        //Scales the image
+                        g.ScaleTransform(xScaleFactor, yScaleFactor);
+
+                        //makes the Image
+                        g.DrawString(doc, ourFont, textBrush, 0, 0, strAlignment);
 
                         g.Flush(FlushIntention.Sync);
 
@@ -167,12 +177,12 @@ namespace String_to_png_to_atlas
             }
             else if (choosedialogResult == DialogResult.No)
             {
-                MessageBox.Show("Files Opened from here" + dataFile + "\n" + "" + "\n" + "Files Saved here" + di, "Completed", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show("Files Opened from here: " + dataFile + "\n" + "" + "\n" + "Files Saved here: " + di, "Completed", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
 
             //Makes a message box showing where you saved your files and what file you chose
-            MessageBox.Show("Files Opened from here" + dataFile + "\n" + "" + "\n" + "Files Saved here" + di, "Completed", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            MessageBox.Show("Files Opened from here: " + dataFile + "\n" + "" + "\n" + "Files Saved here: " + di, "Completed", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         }
     }
 }
