@@ -1,0 +1,22 @@
+using UnityEditor;
+using UnityEngine;
+
+[CustomEditor(typeof(RenderTextureToPNG))]
+public class customInspectorGUI : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        // Draw the default inspector properties
+        DrawDefaultInspector();
+
+        // Get a reference to the target script
+        RenderTextureToPNG renderScript = (RenderTextureToPNG)target;
+
+        // Add a button
+        if (GUILayout.Button("Perform Action"))
+        {
+            // Call the method on the target script when the button is pressed
+            renderScript.CaptureImage();
+        }
+    }
+}
