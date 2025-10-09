@@ -1,0 +1,45 @@
+using System.IO;
+using UnityEngine;
+using System.Collections;
+
+public class RenderTextureToPNG : MonoBehaviour
+{
+    public Camera targetCamera; // Assign your camera here in the Inspector
+
+    public RenderTexture targetRenderTexture;
+    public string savePath = "Assets/Text_To_Image/"; // Path to save images
+
+    public void CaptureImage()
+    {
+        StartCoroutine(CaptureScreenshot());
+    }
+
+    IEnumerator CaptureScreenshot()
+    {
+        yield return new WaitForEndOfFrame(); // Ensure rendering is complete
+
+        RenderTexture currentRT = RenderTexture.active; // Store current active Render Texture
+        RenderTexture.active = targetCamera.targetTexture; // Set target camera's Render Texture as active
+
+        targetCamera.Render(); // Manually render the camera
+
+        Texture2D image = new Texture2D(targetCamera.targetTexture.width, targetCamera.targetTexture.height, TextureFormat.RGB24, false);
+        image.ReadPixels(new Rect(0, 0, targetCamera.targetTexture.width, targetCamera.targetTexture.height), 0, 0);
+        image.Apply();
+
+        RenderTexture.active = currentRT; // Restore original active Render Texture
+
+        byte[] bytes = image.EncodeToPNG(); // Encode to PNG
+        string filename = string.Format("{0}/screenshot_{1}.png", savePath, System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
+
+        // Create directory if it doesn't exist
+        string directory = Path.GetDirectoryName(filename);
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        File.WriteAllBytes(filename, bytes); // Save to file
+        Debug.Log("Screenshot saved to: " + filename);
+    }
+}
