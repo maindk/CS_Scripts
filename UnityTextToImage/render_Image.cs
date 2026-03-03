@@ -4,10 +4,13 @@ using System.IO;
 using System.Threading.Tasks;
 using TMPro;
 using Unity.EditorCoroutines.Editor;
+using Unity.VisualScripting;
 using UnityEditor;
+using UnityEditor.PackageManager.UI;
 using UnityEngine;
-using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class render_Image : EditorWindow
 {
@@ -19,7 +22,7 @@ public class render_Image : EditorWindow
     private GameObject bottom_Text_Object;
 
     //Gets the Camera
-    private Camera mainCamera;
+    private Camera previewCamera;
 
     //Gets the render scene
     private string fullPathOfScene = null;
@@ -29,9 +32,10 @@ public class render_Image : EditorWindow
     private string fileNameWithoutExtension = null;
     private string pathOnly = null;
 
-    //Grabs the Render Texture near the scene file
-    private readonly string nameOfRenderTexture = "renderTextureAsset.renderTexture";
+    //Creates RenderTExture variable
     private RenderTexture renderTexture;
+
+    private GameObject previewObject;
 
     //top text attributes
     private string top_Text_String = "Top Text";
@@ -47,19 +51,40 @@ public class render_Image : EditorWindow
     private float bottom_m_angularOffset = -90.0f;
     private float bottom_Font = 60.0f;
 
+
     [MenuItem("Tools/Render_ImageUI")]
     public static void ShowWindow()
     {
         Rect windowRect = new Rect(100, 100, 400, 1000);
         render_Image window = GetWindowWithRect<render_Image>(windowRect, false, "Render Image UI");
-
-        window.CenterOnMainWin();
-
-        window.FindProperties();
     }
 
-    public void CenterOnMainWin()
+    public void FindProperties()
     {
+        top_Text_Object = GameObject.Find(top_Text_Name);
+        bottom_Text_Object = GameObject.Find(bottom_Text_Name);
+
+        previewCamera = Camera.main;
+
+        //Gets the render scene
+        fullPathOfScene = SceneManager.GetSceneByName("TextToImage").path;
+
+        //gets file paths
+        fileNameWithExtension = Path.GetFileName(fullPathOfScene);
+        fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fullPathOfScene);
+        pathOnly = Path.GetDirectoryName(fullPathOfScene);
+    }
+
+    public void OnEnable()
+    {
+        //Create Render Texture Dynamically
+        int rtWidth = 1024;
+        int rtHeight = 1024;
+
+        renderTexture = new RenderTexture(rtWidth, rtHeight, 24, RenderTextureFormat.ARGB32);
+        renderTexture.Create();
+
+        //Centers the Window
         Rect main = EditorGUIUtility.GetMainWindowPosition();
         Rect pos = position;
 
@@ -69,26 +94,63 @@ public class render_Image : EditorWindow
         pos.x = main.x + centerWidth;
         pos.y = main.y + centerHeight;
         position = pos;
+
+        InitCamera();
+
+        InitCanvas();
+
+        FindProperties();
     }
-    public void FindProperties()
+
+    public void InitCamera()
     {
-        top_Text_Object = GameObject.Find(top_Text_Name);
-        bottom_Text_Object = GameObject.Find(bottom_Text_Name);
+        //camera
+        GameObject camGO = new GameObject("EditorPreviewCamera");
+        previewCamera = camGO.GetComponent<Camera>();
 
-        mainCamera = Camera.main;
+        if (previewCamera == null)
+        {
+            previewCamera = camGO.AddComponent<Camera>();
+        }
+        previewCamera.clearFlags = CameraClearFlags.SolidColor;
+        previewCamera.backgroundColor = Color.black;
 
-        //Gets the render scene
-        fullPathOfScene = SceneManager.GetSceneByName("TextToImage").path;
+        previewCamera.targetTexture = renderTexture;
+        previewCamera.orthographic = false;
+        previewCamera.depth = -1;
 
-        //gets file paths
-        fileNameWithExtension = Path.GetFileName(fullPathOfScene);
-        fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fullPathOfScene);
-        pathOnly = Path.GetDirectoryName(fullPathOfScene);
-
-        //Assigns the RenderTexture.
-        renderTexture = AssetDatabase.LoadAssetAtPath<RenderTexture>(pathOnly + "/" + nameOfRenderTexture);
+        previewCamera.tag = "MainCamera";
     }
-    
+
+    public void InitCanvas()
+    {
+        // 1. Create Canvas
+        GameObject topcanvasGO = new GameObject(top_Text_Name);
+        Canvas topcanvas = topcanvasGO.AddComponent<Canvas>();
+        topcanvas.renderMode = RenderMode.ScreenSpaceCamera;
+
+        // 2. Assign Camera
+        Camera uiCamera = Camera.main;
+
+        topcanvas.worldCamera = uiCamera;
+        topcanvas.planeDistance = 100f;
+
+        // 3. Create TMP Text
+        TextMeshProUGUI topTextInput = topcanvasGO.AddComponent<TextMeshProUGUI>();
+        TextProOnACircle top_textProOnACurve = topcanvasGO.AddComponent<TextProOnACircle>();
+
+        // 1. Create Canvas
+        GameObject bottomcanvasGO = new GameObject(bottom_Text_Name);
+        Canvas bottomcanvas = bottomcanvasGO.AddComponent<Canvas>();
+        bottomcanvas.renderMode = RenderMode.ScreenSpaceCamera;
+
+        bottomcanvas.worldCamera = uiCamera;
+        bottomcanvas.planeDistance = 100f;
+
+        TextMeshProUGUI bottomTextInput = bottomcanvasGO.AddComponent<TextMeshProUGUI>();
+        TextProOnACircle bottom_textProOnACurve = bottomcanvasGO.AddComponent<TextProOnACircle>();
+    }
+
     public void OnGUI()
     {
         //Draw the texture, stretching to fill the window
@@ -137,9 +199,6 @@ public class render_Image : EditorWindow
         // Create a button
         if (GUILayout.Button("Update Image"))
         {
-            //starts UpdateText
-            UpdateText();
-
             //Waits till we start the image Render to give time to update the scene
             DelayUseAsync();
         }
@@ -159,6 +218,7 @@ public class render_Image : EditorWindow
 
     public void UpdateText()
     {
+        
         //Gets the TMPro asset
         TMP_Text topTextInput = top_Text_Object.GetComponent<TextMeshProUGUI>();
 
@@ -203,16 +263,16 @@ public class render_Image : EditorWindow
     public void Render_Image()
     {
         //Renders Camera View
-        mainCamera.Render();
+        previewCamera.Render();
 
         //Make sure there is a renderTexture on the camera
-        RenderTexture rt = mainCamera.targetTexture;
+        RenderTexture rt = previewCamera.targetTexture;
 
         //Sets teh renterTexture to active from the main Camera renderTexure
         RenderTexture.active = rt;
 
         //Renders Camera View
-        mainCamera.Render();
+        previewCamera.Render();
 
         //Read the pixels into a Texture2D
         Texture2D image = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGB24, false);
@@ -230,5 +290,27 @@ public class render_Image : EditorWindow
 
         //Refreshes the database
         AssetDatabase.Refresh();
+    }
+
+    private void Update()
+    {
+        //starts UpdateText
+        UpdateText();
+    }
+
+    private void OnDisable()
+    {
+        if (previewObject != null)
+        {
+            DestroyImmediate(previewObject);
+        }
+
+        GameObject mainCameraObject = GameObject.FindGameObjectWithTag("MainCamera");
+        DestroyImmediate(mainCameraObject);
+
+        DestroyImmediate(top_Text_Object);
+        DestroyImmediate(bottom_Text_Object);
+
+
     }
 }
