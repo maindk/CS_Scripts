@@ -1,0 +1,233 @@
+using ntw.CurvedTextMeshPro;
+using System.IO;
+using TMPro;
+using Unity.VisualScripting;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class Text_To_RenderImage_Script : EditorWindow
+{
+    private Camera previewCamera;
+    private GameObject cameraGameObject;
+    private string previewCameraName = "Camera";
+    private int previewCameraDepth = -1;
+    private Color bgColor = Color.black;
+
+    private TextProOnACircle circulizeTextScript;
+
+    private GameObject renderCanvasGameObject;
+    private Canvas renderCanvas;
+
+
+    private TextMeshProUGUI renderText;
+    private Color renderTextColor = Color.white; 
+    private float renderTextFontSize = 200;
+    private string renderTextInput = "Hello World";
+    private TextAlignmentOptions renderTextAlignment = TextAlignmentOptions.Center;
+    
+
+    private string previousScenePath;
+    private Scene previousScene;
+    private Scene textScene;
+
+
+    private RenderTexture renderTexture;
+    private string RenderTextureName = "Render_Texture_Asset";
+    private int rtWidth = 1024;
+    private int rtHeight = 1024;
+    private int rtDepth = 24;
+
+    private Texture2D renderImage;
+
+    private bool circulizeText = false;
+    private float tmpC_Radius = 380;
+    private float tmpC_Arc_Degrees = 100;
+    private float tmpC_Angular_Offset = -90;
+
+
+    [MenuItem("Tools/Text_To_Image")]
+    public static void ShowWindow()
+    {
+        GetWindow<Text_To_RenderImage_Script>("Text To Image");
+    }
+
+    void OnEnable()
+    {
+        //opens a new scene that will be used
+        creatScene();
+
+        //creates the Render Texture
+        createRT();
+
+        //Create objects in the scene
+        createSceneObjects();
+    }
+
+    void creatScene()
+    {
+        previousScene = EditorSceneManager.GetActiveScene();
+        previousScenePath = previousScene.path;
+
+        textScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        textScene.name = "Text Scene";
+    }
+
+    void createRT()
+    {
+        renderTexture = new RenderTexture(rtWidth, rtHeight, rtDepth, RenderTextureFormat.ARGB32);
+        renderTexture.Create();
+        renderTexture.name = RenderTextureName;
+    }
+
+    void createSceneObjects()
+    {
+        cameraGameObject = new GameObject(previewCameraName);
+        previewCamera = cameraGameObject.AddComponent<Camera>();
+        previewCamera.clearFlags = CameraClearFlags.SolidColor;
+        previewCamera.backgroundColor = bgColor;
+
+
+        previewCamera.targetTexture = renderTexture;
+        previewCamera.depth = previewCameraDepth;
+        previewCamera.tag = "MainCamera";
+
+
+        renderCanvasGameObject = new GameObject("Canvas");
+        renderCanvas = renderCanvasGameObject.AddComponent<Canvas>();
+        renderCanvas.worldCamera = previewCamera;
+        renderCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+        renderCanvas.vertexColorAlwaysGammaSpace = true;
+
+
+        renderText = renderCanvasGameObject.AddComponent<TextMeshProUGUI>();
+        renderText.text = renderTextInput;
+        renderText.color = renderTextColor;
+        renderText.fontSize = renderTextFontSize;
+        renderText.alignment = renderTextAlignment;
+
+
+        circulizeTextScript.m_radius = tmpC_Radius;
+        circulizeTextScript.m_arcDegrees = tmpC_Arc_Degrees;
+        circulizeTextScript.m_angularOffset = tmpC_Angular_Offset;
+    }
+
+    void OnGUI()
+    {
+        Rect rect = GUILayoutUtility.GetAspectRect(rtWidth / rtHeight);
+        EditorGUI.DrawPreviewTexture(rect, renderTexture);
+
+        //--------------------------------------------------------------------------------------------
+
+        renderTextInput = EditorGUILayout.TextField("Input String", renderTextInput);
+        renderTextFontSize = EditorGUILayout.FloatField("Text Font", renderTextFontSize);
+
+        circulizeText = EditorGUILayout.Toggle("Circulize Text", circulizeText);
+
+        if (circulizeText == true) 
+        {
+           if (circulizeTextScript == null)
+            {
+                circulizeTextScript = renderCanvasGameObject.AddComponent<TextProOnACircle>();
+            }
+
+            tmpC_Radius = EditorGUILayout.FloatField("Radius", tmpC_Radius);
+            tmpC_Arc_Degrees = EditorGUILayout.FloatField("Arc Degrees", tmpC_Arc_Degrees);
+            tmpC_Angular_Offset = EditorGUILayout.FloatField("Angular offset", tmpC_Angular_Offset);
+        }
+        else
+        {
+            if (circulizeTextScript != null)
+            {
+                DestroyImmediate
+                    (circulizeTextScript);
+            }
+        }
+
+        GUILayout.Space(20);
+
+        if (GUILayout.Button("Turn Background Black"))
+        {
+            updatecamBG();
+            
+        }
+
+        GUILayout.Space(20);
+
+        if (GUILayout.Button("Render The Image"))
+        {
+            //RenderImage();
+        }
+    }
+
+    void statusWindowStats()
+    {
+        renderText.text = renderTextInput;
+        renderText.fontSize = renderTextFontSize;
+
+        circulizeTextScript.m_radius = tmpC_Radius;
+        circulizeTextScript.m_arcDegrees = tmpC_Arc_Degrees;
+        circulizeTextScript.m_angularOffset = tmpC_Angular_Offset;
+    }
+
+    void updatecamBG()
+    {
+        HDAdditionalCameraData hdData = Camera.main.GetComponent<HDAdditionalCameraData>();
+        hdData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+        hdData.backgroundColorHDR = bgColor;
+        hdData.volumeLayerMask = 0;
+
+        Repaint();
+        
+    }
+
+    void RenderImage()
+    {
+        //Renders Camera View
+        previewCamera.Render();
+
+        //Make sure there is a renderTexture on the camera
+        RenderTexture rt = previewCamera.targetTexture;
+
+        //Sets teh renterTexture to active from the main Camera renderTexure
+        RenderTexture.active = rt;
+
+        //Renders Camera View
+        previewCamera.Render();
+
+        //Read the pixels into a Texture2D
+        renderImage = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGB24, false);
+        renderImage.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+        renderImage.Apply();
+
+        //Encode the TExture2d to PNG bytes
+        byte[] bytes = renderImage.EncodeToPNG();
+
+        //Saves the file path out
+        //string filePath = Path.Combine(pathOnly + "/" + top_Text_String + "_" + bottom_Text_String + ".png");
+        string projectPath = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf('/'));
+
+
+        //Writes the Bytes to the file
+        File.WriteAllBytes(projectPath, bytes);
+
+        //Refreshes the database
+        AssetDatabase.Refresh();
+    }
+
+    void Update()
+    {
+        statusWindowStats();
+
+        Repaint();
+    }
+
+    void OnDisable()
+    {
+        renderTexture.Release();
+        EditorSceneManager.OpenScene(previousScenePath, OpenSceneMode.Single);
+    }
+}
