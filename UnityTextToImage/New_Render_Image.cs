@@ -247,6 +247,8 @@ public class Text_To_RenderImage_Script : EditorWindow
                     Straight_RenderText.alignment = Straight_RenderTextAlignment;
                     break;
             }
+
+            Repaint();
         }
         else
         {
@@ -287,6 +289,8 @@ public class Text_To_RenderImage_Script : EditorWindow
             Bottom_CirculizeTextScript.m_radius = Bottom_tmpC_Radius;
             Bottom_CirculizeTextScript.m_arcDegrees = Bottom_tmpC_Arc_Degrees;
             Bottom_CirculizeTextScript.m_angularOffset = Bottom_tmpC_Angular_Offset;
+
+            Repaint();
         }
 
         GUILayout.Space(20);
