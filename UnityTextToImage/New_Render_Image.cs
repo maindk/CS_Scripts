@@ -42,7 +42,7 @@ public class Text_To_RenderImage_Script : EditorWindow
     private string[] AlignmentOptions = new string[] {"Left", "Center", "Right"};
 
 
-    private bool CirculizeText = false;
+    private bool CirculizeText = true;
 
 
     private TextProOnACircle Top_CirculizeTextScript;
@@ -293,13 +293,12 @@ public class Text_To_RenderImage_Script : EditorWindow
             Repaint();
         }
 
-        GUILayout.Space(20);
+        //GUILayout.Space(20);
 
-        if (GUILayout.Button("Turn Background Black"))
-        {
-            //updatecamBG();
-            
-        }
+        //if (GUILayout.Button("Turn Background Black"))
+        //{
+        //    updatecamBG();
+        //}
 
         GUILayout.Space(20);
 
@@ -310,9 +309,6 @@ public class Text_To_RenderImage_Script : EditorWindow
 
             Debug.Log(ProjectPath);
         }
-
-
-        Repaint();
     }
 
     //void updatecamBG()
