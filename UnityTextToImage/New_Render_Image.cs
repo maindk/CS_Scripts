@@ -293,35 +293,28 @@ public class Text_To_RenderImage_Script : EditorWindow
             Repaint();
         }
 
-        //GUILayout.Space(20);
-
-        //if (GUILayout.Button("Turn Background Black"))
-        //{
-        //    updatecamBG();
-        //}
-
-        GUILayout.Space(20);
-
-        if (GUILayout.Button("Render The Image"))
+        
+        if (GUILayout.Button("Render to Image"))
         {
-            //RenderImage();
-            ProjectPath = Path.Combine(Application.dataPath + "/" + ImageName);
+            RenderTextImage()
+        }
+                
+    void ForceUpdateBackground()
+    }
 
-            Debug.Log(ProjectPath);
+    void ForceUpdateBackground()
+    {
+        HDAdditionalCameraData HDData = previewCamera.GetComponent<HDAdditionalCameraData>();
+        if (HDData != null)
+        {
+            hdData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+            hdData.backgroundColorHDR = bgColor;
+            hdData.volumeLayerMask = 0;
+            Repaint();
         }
     }
 
-    //void updatecamBG()
-    //{
-    //    HDAdditionalCameraData hdData = previewCamera.GetComponent<HDAdditionalCameraData>();
-    //    hdData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
-    //    hdData.backgroundColorHDR = bgColor;
-    //    hdData.volumeLayerMask = 0;
-    //    Repaint();
-        
-    //}
-
-    void RenderImage()
+    void RenderTextImage()
     {
         ProjectPath = Application.dataPath;
 
