@@ -192,6 +192,18 @@ public class Text_To_RenderImage_Script : EditorWindow
         Bottom_CirculizeTextScript.m_angularOffset = Bottom_tmpC_Angular_Offset;
     }
 
+    void ForceUpdateBackground()
+    {
+        HDAdditionalCameraData HDData = previewCamera.GetComponent<HDAdditionalCameraData>();
+        if (HDData != null)
+        {
+            hdData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+            hdData.backgroundColorHDR = bgColor;
+            hdData.volumeLayerMask = 0;
+            Repaint();
+        }
+    }
+
     void OnGUI()
     {
         Rect rect = GUILayoutUtility.GetAspectRect(RenderTexturetWidth / RenderTextureHeight);
@@ -298,21 +310,13 @@ public class Text_To_RenderImage_Script : EditorWindow
         {
             RenderTextImage()
         }
+    
                 
     void ForceUpdateBackground()
     }
-
-    void ForceUpdateBackground()
-    {
-        HDAdditionalCameraData HDData = previewCamera.GetComponent<HDAdditionalCameraData>();
-        if (HDData != null)
-        {
-            hdData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
-            hdData.backgroundColorHDR = bgColor;
-            hdData.volumeLayerMask = 0;
-            Repaint();
-        }
     }
+
+
 
     void RenderTextImage()
     {
