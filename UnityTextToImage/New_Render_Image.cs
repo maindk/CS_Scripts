@@ -312,11 +312,8 @@ public class Text_To_RenderImage_Script : EditorWindow
         }
     
                 
-    void ForceUpdateBackground()
+        ForceUpdateBackground()
     }
-    }
-
-
 
     void RenderTextImage()
     {
