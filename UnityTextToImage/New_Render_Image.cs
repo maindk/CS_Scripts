@@ -323,27 +323,30 @@ public class Text_To_RenderImage_Script : EditorWindow
 
     void RenderImage()
     {
-        //doesnt work for some reason
-        //Renders Camera View
-        PreviewCamera.Render();
+        ProjectPath = Application.dataPath;
 
-        //Read the pixels into a Texture2D
-        RenderPNGImage = new Texture2D(RenderTexturetWidth, RenderTextureHeight, TextureFormat.RGB24, false);
-        RenderPNGImage.ReadPixels(new Rect(0, 0, RenderTexturetWidth, RenderTextureHeight), 0, 0);
+        RenderTexture.active = PreviewRenderTexture;
+        previewCamera.Render();
+
+        RenderPNGImage = new Texture2D(PreviewRenderTexture.width, PreviewRenderTexture.height, TextureFormat.RGB24, false);
+        RenderPNGImage.ReadPixels(new Rect(0, 0, PreviewRenderTexture.width, PreviewRenderTexture.height), 0, 0);
         RenderPNGImage.Apply();
 
-        //Encode the TExture2d to PNG bytes
         Bytes = RenderPNGImage.EncodeToPNG();
 
-        //Saves the file path out
-        //string filePath = Path.Combine(pathOnly + "/" + top_Text_String + "_" + bottom_Text_String + ".png");
-        ProjectPath = Path.Combine(Application.dataPath + ImageName);
+        if (string.IsNullOrEmpty(ImageName))
+        {
+            string filePath = Path.Combine(ProjectPAth + "/" + "Empty" + ".png");
 
+            File.WriteAllBytes(filePath, Bytes);
+        }
+        else
+        {
+            string filePath = Path.Combine(ProjectPAth + "/" + ImageName + ".png");
 
-        //Writes the Bytes to the file
-        File.WriteAllBytes(ProjectPath, Bytes);
+            File.WriteAllBytes(filePath, Bytes
+        }
 
-        //Refreshes the database
         AssetDatabase.Refresh();
         DestroyImmediate(RenderPNGImage);
     }
