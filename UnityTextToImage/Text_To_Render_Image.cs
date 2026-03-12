@@ -292,19 +292,14 @@ public class Text_To_RenderImage_Script : EditorWindow
             Repaint();
         }
 
-        //GUILayout.Space(20);
-
-        //if (GUILayout.Button("Turn Background Black"))
-        //{
-        //    updatecamBG();
-        //}
-
         GUILayout.Space(20);
 
         if (GUILayout.Button("Render The Image"))
         {
             RenderImage();
         }
+
+        //updatecamBG()
     }
 
     //void updatecamBG()
