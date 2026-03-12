@@ -3,8 +3,8 @@ using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-//using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.SceneManagement;
+//using UnityEngine.Rendering.HighDefinition;
 
 public class Text_To_RenderImage_Script : EditorWindow
 {
@@ -40,9 +40,7 @@ public class Text_To_RenderImage_Script : EditorWindow
     private int SelectedAlignemntIndex = 1;
     private string[] AlignmentOptions = new string[] {"Left", "Center", "Right"};
 
-
     private bool CirculizeText = true;
-
 
     private TextProOnACircle Top_CirculizeTextScript;
 
@@ -59,7 +57,6 @@ public class Text_To_RenderImage_Script : EditorWindow
     private float Top_tmpC_Arc_Degrees = 100;
     private float Top_tmpC_Angular_Offset = -90;
 
-
     private TextProOnACircle Bottom_CirculizeTextScript;
 
     private GameObject Bottom_RenderCanvasGameObject;
@@ -74,7 +71,6 @@ public class Text_To_RenderImage_Script : EditorWindow
     private float Bottom_tmpC_Radius = -270;
     private float Bottom_tmpC_Arc_Degrees = -100;
     private float Bottom_tmpC_Angular_Offset = -90;
-
 
     private Texture2D RenderPNGImage;
     private byte[] Bytes;
@@ -108,7 +104,6 @@ public class Text_To_RenderImage_Script : EditorWindow
         PreviewCamera = CameraGameObject.AddComponent<Camera>();
         PreviewCamera.clearFlags = CameraClearFlags.SolidColor;
         PreviewCamera.backgroundColor = BackGroundColor;
-
 
         PreviewCamera.targetTexture = PreviewRenderTexture;
         PreviewCamera.depth = PreviewCameraDepth;
@@ -150,7 +145,6 @@ public class Text_To_RenderImage_Script : EditorWindow
         {
             CreateCanvasObjectCircle();
         }
-
     }
 
     void CreateCanvasObjectCircle()
@@ -195,17 +189,11 @@ public class Text_To_RenderImage_Script : EditorWindow
     {
         Rect rect = GUILayoutUtility.GetAspectRect(RenderTexturetWidth / RenderTextureHeight);
         EditorGUI.DrawPreviewTexture(rect, PreviewRenderTexture);
-
         //--------------------------------------------------------------------------------------------
-        
         ImageName = EditorGUILayout.TextField("ImageName", ImageName);
-
         //--------------------------------------------------------------------------------------------
-
         CirculizeText = EditorGUILayout.Toggle("Circulize Text", CirculizeText);
-
         //--------------------------------------------------------------------------------------------
-
         if (CirculizeText == false)
         {
             if (Straight_RenderCanvasGameObject == null)
@@ -299,17 +287,19 @@ public class Text_To_RenderImage_Script : EditorWindow
             RenderImage();
         }
 
-        //updatecamBG()
+        //updateHDCamBG()
     }
 
-    //void updatecamBG()
+    //void updateHDCamBG()
     //{
     //    HDAdditionalCameraData hdData = previewCamera.GetComponent<HDAdditionalCameraData>();
-    //    hdData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
-    //    hdData.backgroundColorHDR = bgColor;
-    //    hdData.volumeLayerMask = 0;
-    //    Repaint();
-        
+    //    if (hdData != null)
+    //    {
+    //        hdData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+    //        hdData.backgroundColorHDR = bgColor;
+    //        hdData.volumeLayerMask = 0;
+    //        Repaint();
+    //    }
     //}
 
     void RenderImage()
