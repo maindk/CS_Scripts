@@ -40,10 +40,10 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
       var materials = Selection.GetFiltered<Material>(SelectionMode.Assets);
       int count = 0;
 
-      Material selectedMAterial = Selection.activeObject as Material;
+      Material selectedMaterial = Selection.activeObject as Material;
       string materialPath = AssetDatabase.GetAssetPath(selectedMaterial);
 
-      if (string.IsNullOrEmpty(materialPath) || !materialPath.ToLower().Endswith(".maty"))
+      if (!materialPath.Endswith(".mat"), System.StringComparison.CurrentCultureIgnoreCase)
       {
         debug.LogError("Please select a material file");
         return;
@@ -51,7 +51,7 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
 
       foreach (var mat in materials)
       {
-        string[] textures = AssetDatabase.FindAssets("t:Textures2D", null);
+        string[] textures = AssetDatabase.FindAssets($"t:{typeof(Texture2D).Name}");
 
         foreach (string guid in textures)
         {
@@ -63,10 +63,17 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
           if (texName.Contains(mat.name))
           {
             Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            if (parameters.Contains("albedo, System.StringComparison.ORdinalIgnoreCase)
+            mat.color = new color(1, 1, 1, 1)
+            
+            if (parameters.Contains("albedo, System.StringComparison.OrdinalIgnoreCase) || parameters.Contains("diffuse, System.StringComparison.OrdinalIgnoreCase))
               mat.SetTexture("_BaseColorMap", tex);
-            else if ( (texName.Contains("Normal") || texName.Contains("normal))
+            else if (parameters.Contains("normal, System.StringComparison.OrdinalIgnoreCase)
               mat.SetTexture("_NormalMap", tex);
+            else if (parameters.Contains("maskmap, System.StringComparison.OrdinalIgnoreCase)
+              mat.SetTexture("_MaskMap", tex);
+            else if (parameters.Contains("emissive, System.StringComparison.OrdinalIgnoreCase)
+              mat.SetTexture("_EmissiveColorMap", tex);
+              
             count++;
           }
         }
@@ -80,7 +87,7 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
       Objects selectedObjects = Selection.activeGameObject;
       string assetPath = AssetDatabase.GetAssetPath(selectedObject);
 
-      if(string.IsNullOrEmpty(assetPath) || !assetPath.ToLower().EndsWith(".fbx"))
+      if((!materialPath.Endswith(".fbx"), System.StringComparison.CurrentCultureIgnoreCase)
       {
         Debug.LogError("PLease select a FBX File")
         return;
