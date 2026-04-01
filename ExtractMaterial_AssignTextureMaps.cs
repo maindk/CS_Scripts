@@ -42,6 +42,35 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
 
     void ExtractMaterials()
     {
-    
+      Objects selectedObjects = Selection.activeGameObject;
+      string assetPath = AssetDatabase.GetAssetPath(selectedObject);
+
+      if(string.IsNullOrEmpty(assetPath) || !assetPath.ToLower().EndsWith(".fbx"))
+      {
+        Debug.LogError("PLease select a FBX File")
+        return;
+      }
+
+      string destinationPath = Path.GetDirectoryName(assetPath);
+
+      var subAssets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+      var materials - subAssets.Where(x => x is Material);
+
+      foreach (var material in materials)
+      {
+        string newPath = Path.Combine(destinationPath, material.name + ".mat")
+        newPath = AssetDatabase.ExtractAsset(material, newPath);
+
+        if (string.IsNullOrEmpty(error))
+        {
+          AssetDatabase.WriteImportSettingsIfDirty(assetPath);
+          AsserDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+        }
+        else
+        {
+          Debug.LogWarning($"Failed to extarct {material.name}: {error}")
+        }
+      }
+      
     }
 }
