@@ -58,10 +58,12 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
           string path = AssetDatabase.GUIDToAssetPath(guid);
           string texName = Path.GetFileNameWithoutExtension(path);
 
+          string parameters = texName.Replacwe("_", "");
+
           if (texName.Contains(mat.name))
           {
             Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            if (texName.Contains("_Albedo") || texName.Contains("BaseColor))
+            if (parameters.Contains("albedo, System.StringComparison.ORdinalIgnoreCase)
               mat.SetTexture("_BaseColorMap", tex);
             else if ( (texName.Contains("Normal") || texName.Contains("normal))
               mat.SetTexture("_NormalMap", tex);
