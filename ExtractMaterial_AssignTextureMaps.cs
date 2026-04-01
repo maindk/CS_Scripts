@@ -37,9 +37,42 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
 
     void AssignTextures()
     {
-      
-    }
+      var materials = Selection.GetFiltered<Material>(SelectionMode.Assets);
+      int count = 0;
 
+      Material selectedMAterial = Selection.activeObject as Material;
+      string materialPath = AssetDatabase.GetAssetPath(selectedMaterial);
+
+      if (string.IsNullOrEmpty(materialPath) || !materialPath.ToLower().Endswith(".maty"))
+      {
+        debug.LogError("Please select a material file");
+        return;
+      }
+
+      foreach (var mat in materials)
+      {
+        string[] textures = AssetDatabase.FindAssets("t:Textures2D", null);
+
+        foreach (string guid in textures)
+        {
+          string path = AssetDatabase.GUIDToAssetPath(guid);
+          string texName = Path.GetFileNameWithoutExtension(path);
+
+          if (texName.Contains(mat.name))
+          {
+            Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (texName.Contains("_Albedo") || texName.Contains("BaseColor))
+              mat.SetTexture("_BaseColorMap", tex);
+            else if ( (texName.Contains("Normal") || texName.Contains("normal))
+              mat.SetTexture("_NormalMap", tex);
+            count++;
+          }
+        }
+      }
+      AssetDatabase.SaveAssets();
+      Debug.Log($"Matched {count} textures to materials")
+    }
+    
     void ExtractMaterials()
     {
       Objects selectedObjects = Selection.activeGameObject;
