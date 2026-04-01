@@ -24,7 +24,7 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
 
     if(GUILayout.Button("Extract Materials"))
     {
-      ExtractMAterials();
+      ExtractMaterials();
     }
 
     EditorGUILayout.Space(30);
@@ -34,6 +34,14 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
       AssignTextures();
     }
   }
-  
-  
+
+    void AssignTextures()
+    {
+      
+    }
+
+    void ExtractMaterials()
+    {
+    
+    }
 }
