@@ -2,9 +2,26 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UNityEngine;
+using System;
 
 public class ExtractMaterial_AssignTextureMaps : EditorWindow
 {
+  private int MaterialTypeIndex = 0;
+  private string[] = MAterialOptions = new string[] {"HDRP/Lit", "Standard", "URP/Lit"}
+
+  private const string BASE_COLOR_MAP_HDRP = "_BaseColorMap";
+  private const string NORMAL_MAP_HDRP = "_NormalMap";
+  private const string MASK_MAP_HDRP = "_MaskMap";
+  private const string EMISSIVE_MAP_HDRP = "_EmissiveColorMap";
+
+  private const string MAIN_TEXTURE_STANDARD = "";
+  private const string BASE_MAP_URP = "";
+
+  private const string BUMP_MAP_URP_STANDARD = "";
+  private const string METALLICGLOSS_MAP_URP_STANDARD = "";
+  private const string AO_MAP_URP_STANDARD = "";
+  private const string EMISSION_MAP_URP_STANDARD = "";
+
   [MenuItem("Tools/ExtractMaterial_AssignTextureMaps")]
   public static void showWIndow()
   {
@@ -64,16 +81,21 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
           {
             Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             mat.color = new color(1, 1, 1, 1)
-            
-            if (parameters.Contains("albedo, System.StringComparison.OrdinalIgnoreCase) || parameters.Contains("diffuse, System.StringComparison.OrdinalIgnoreCase))
+
+            switch (MatetrialTypeINdex)
+            {
+              case 0;
+                          if (parameters.Contains("albedo, StringComparison.OrdinalIgnoreCase) || parameters.Contains("diffuse, StringComparison.OrdinalIgnoreCase))
               mat.SetTexture("_BaseColorMap", tex);
-            else if (parameters.Contains("normal, System.StringComparison.OrdinalIgnoreCase)
+                          else if (parameters.Contains("normal, StringComparison.OrdinalIgnoreCase)
               mat.SetTexture("_NormalMap", tex);
-            else if (parameters.Contains("maskmap, System.StringComparison.OrdinalIgnoreCase)
+                          else if (parameters.Contains("maskmap, StringComparison.OrdinalIgnoreCase)
               mat.SetTexture("_MaskMap", tex);
-            else if (parameters.Contains("emissive, System.StringComparison.OrdinalIgnoreCase)
-              mat.SetTexture("_EmissiveColorMap", tex);
               
+                else if (parameters.Contains("emissive, StringComparison.OrdinalIgnoreCase)
+                 mat.SetTexture("_EmissiveColorMap", tex);
+            }
+
             count++;
           }
         }
@@ -84,35 +106,34 @@ public class ExtractMaterial_AssignTextureMaps : EditorWindow
     
     void ExtractMaterials()
     {
-      Objects selectedObjects = Selection.activeGameObject;
-      string assetPath = AssetDatabase.GetAssetPath(selectedObject);
-
-      if((!materialPath.Endswith(".fbx"), System.StringComparison.CurrentCultureIgnoreCase)
-      {
-        Debug.LogError("PLease select a FBX File")
-        return;
-      }
-
-      string destinationPath = Path.GetDirectoryName(assetPath);
-
-      var subAssets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
-      var materials - subAssets.Where(x => x is Material);
-
-      foreach (var material in materials)
-      {
-        string newPath = Path.Combine(destinationPath, material.name + ".mat")
-        newPath = AssetDatabase.ExtractAsset(material, newPath);
-
-        if (string.IsNullOrEmpty(error))
-        {
-          AssetDatabase.WriteImportSettingsIfDirty(assetPath);
-          AsserDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
-        }
-        else
-        {
-          Debug.LogWarning($"Failed to extarct {material.name}: {error}")
-        }
-      }
+      UNityEngine.Objects selectedObjects = Selection.activeGameObject;
       
-    }
+
+    if(selectedObject != null)
+    {
+          string assetPath = AssetDatabase.GetAssetPath(selectedObject);
+          string destinationPath = Path.GetDirectoryName(assetPath);
+
+          var subAssets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+          var materials - subAssets.Where(x => x is Material);
+          foreach (var material in materials)
+        {
+          string newPath = Path.Combine(destinationPath, material.name + ".mat")
+          newPath = AssetDatabase.ExtractAsset(material, newPath);
+          if (string.IsNullOrEmpty(error))
+          {
+            AssetDatabase.WriteImportSettingsIfDirty(assetPath);
+            AsserDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+          }
+          else
+          {
+            Debug.LogWarning($"Failed to extarct {material.name}: {error}")
+          }
+        }
+      }
+      else
+      {
+        debug.log("Nothing is selected")
+      }
+  }
 }
