@@ -7,20 +7,20 @@ using UnityEngine;
     public class ExtractMaterial_AssignTextureMaps : EditorWindow
     {
         private int MaterialTypeIndex = 0;
-        private string[] MaterialOptions = new string[] { "HDRP/Lit", "Standard", "URP/Lit" };
-
+        private string[] MaterialOptions = new string[] { "HDRP/Lit", "URP/Lit" };
+        
+        //HDRP settings
         private const string BASE_COLOR_MAP_HDRP = "_BaseColorMap";
         private const string NORMAL_MAP_HDRP = "_NormalMap";
         private const string MASK_MAP_HDRP = "_MaskMap";
         private const string EMISSIVE_MAP_HDRP = "_EmissiveColorMap";
 
-        private const string MAIN_TEXTURE_STANDARD = "";
-        private const string BASE_MAP_URP = "";
-
-        private const string BUMP_MAP_URP_STANDARD = "";
-        private const string METALLICGLOSS_MAP_URP_STANDARD = "";
-        private const string AO_MAP_URP_STANDARD = "";
-        private const string EMISSION_MAP_URP_STANDARD = "";
+        //URP Settings
+        private const string BASE_MAP_URP = "_BaseMap";
+        private const string BUMP_MAP_URP = "_BumpMap";
+        private const string METALLICGLOSS_MAP_URP = "_MetallicGlossMap";
+        private const string AO_MAP_URP = "_OcclusionMap";
+        private const string EMISSION_MAP_URP = "_EmissionMap";
 
     [MenuItem("Tools/ExtractMaterial_AssignTextureMaps")]
     public static void showWIndow()
@@ -43,6 +43,10 @@ using UnityEngine;
         {
             ExtractMaterials();
         }
+
+        EditorGUILayout.Space(30);
+
+        MaterialTypeIndex = EditorGUILayout.Popup("", MaterialTypeIndex, MaterialOptions);
 
         EditorGUILayout.Space(30);
 
@@ -84,19 +88,36 @@ using UnityEngine;
   
                             switch (MaterialTypeIndex)
                             {
-                                case 0:
-                                    if (parameters.Contains("albedo", StringComparison.OrdinalIgnoreCase) || parameters.Contains("diffuse", StringComparison.OrdinalIgnoreCase))
-                                        mat.SetTexture(BASE_COLOR_MAP_HDRP, tex);
-                            
-                                    else if (parameters.Contains("normal", StringComparison.OrdinalIgnoreCase))
-                                        mat.SetTexture(NORMAL_MAP_HDRP, tex);
-                                
-                                    else if (parameters.Contains("maskmap", StringComparison.OrdinalIgnoreCase))
-                                        mat.SetTexture(MASK_MAP_HDRP, tex);
+                            case 0:
+                                if (parameters.Contains("albedo", StringComparison.OrdinalIgnoreCase) || parameters.Contains("diffuse", StringComparison.OrdinalIgnoreCase) || parameters.Contains("basecolor", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(BASE_COLOR_MAP_HDRP, tex);
 
-                                    else if (parameters.Contains("emissive", StringComparison.OrdinalIgnoreCase))
-                                        mat.SetTexture(EMISSIVE_MAP_HDRP, tex);
-                                break;
+                                else if (parameters.Contains("normal", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(NORMAL_MAP_HDRP, tex);
+
+                                else if (parameters.Contains("maskmap", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(MASK_MAP_HDRP, tex);
+
+                                else if (parameters.Contains("emissive", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(EMISSIVE_MAP_HDRP, tex);
+                            break;
+
+                            case 1:
+                                if (parameters.Contains("albedo", StringComparison.OrdinalIgnoreCase) || parameters.Contains("diffuse", StringComparison.OrdinalIgnoreCase) || parameters.Contains("basecolor", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(BASE_MAP_URP, tex);
+
+                                else if (parameters.Contains("normal", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(BUMP_MAP_URP, tex);
+
+                                else if (parameters.Contains("metallicsmoothness", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(METALLICGLOSS_MAP_URP, tex);
+
+                                else if (parameters.Contains("ao", StringComparison.OrdinalIgnoreCase) || parameters.Contains("ambientOcclusion", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(AO_MAP_URP, tex);
+
+                                else if (parameters.Contains("emissive", StringComparison.OrdinalIgnoreCase))
+                                    mat.SetTexture(EMISSION_MAP_URP, tex);
+                            break;
                             }
 
                         count++;
