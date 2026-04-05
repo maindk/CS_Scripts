@@ -144,5 +144,40 @@ public class BatchMaterialImporter : EditorWindow
             }
             Debug.Log($"Found {materialGUIDs.Length} materials in {folderPath}");
         }
+
+        if (GUILayout.Button("Assign convex hull mesh to prefab"))
+        {
+            foreach (GameObject obj in Selection.gameObjects)
+            {
+                
+
+                // 2. Load the specific mesh asset (update path)
+                Mesh newMesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Hivemind/Art/Meshes/Props/" + obj.name + ".fbx");
+
+                // 3. Modify the prefab
+                string path = AssetDatabase.GetAssetPath(obj);
+                GameObject prefabRoot = PrefabUtility.LoadPrefabContents(path);
+
+                // Assign to MeshFilter
+                if (prefabRoot.TryGetComponent<MeshFilter>(out MeshFilter mf))
+                {
+                    mf.sharedMesh = newMesh;
+                }
+
+                // Setup/Update Convex Collider
+                MeshCollider mc = prefabRoot.GetComponent<MeshCollider>();
+                if (mc == null) mc = prefabRoot.AddComponent<MeshCollider>();
+
+                mc.sharedMesh = newMesh;
+                mc.convex = true; // Set to Convex
+
+                // 4. Save and Unload
+                PrefabUtility.SaveAsPrefabAsset(prefabRoot, path);
+                PrefabUtility.UnloadPrefabContents(prefabRoot);
+                AssetDatabase.SaveAssets();
+
+                Debug.Log("Mesh assigned and made convex: " + obj.name);
+            }
+        }
     }
 }
