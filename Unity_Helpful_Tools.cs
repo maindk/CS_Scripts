@@ -179,5 +179,23 @@ public class BatchMaterialImporter : EditorWindow
                 Debug.Log("Mesh assigned and made convex: " + obj.name);
             }
         }
+
+        if (GUILayout.Button("Set as Static"))
+        {
+                GameObject[] selectedObjects = Selection.gameObjects;
+
+                foreach (GameObject obj in selectedObjects)
+                {
+                    // Define the flags (e.g., Everything, or custom bits)
+                    StaticEditorFlags flags = StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.BatchingStatic;
+
+                    // Apply the flags to the GameObject
+                    GameObjectUtility.SetStaticEditorFlags(obj, flags);
+
+                    // Optional: Mark prefab as dirty to save changes
+                    EditorUtility.SetDirty(obj);
+                    Debug.Log(obj.name + " set to static.", obj);
+                }
+        }
     }
 }
