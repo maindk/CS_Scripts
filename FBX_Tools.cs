@@ -20,69 +20,80 @@ public class FBX_Tools : EditorWindow
 
     private void OnGUI()
     {
+        //Sets the amterial import settings for the FBX assets.
         GUILayout.BeginHorizontal();
-
-        if (GUILayout.Button("Set Materials Creation Mode to Material Description"))
         {
-            MaterialCreationModeMaterialDescription();
-        }
+            if (GUILayout.Button("Set Materials Creation Mode to Material Description"))
+            {
+                MaterialCreationModeMaterialDescription();
+            }
 
-        if (GUILayout.Button("Set Materials Creation Mode to None"))
-        {
-            MaterialCreationModeNone();
-        }
+            if (GUILayout.Button("Set Materials Creation Mode to None"))
+            {
+                MaterialCreationModeNone();
+            }
 
-        GUILayout.EndHorizontal();
-
-        GUILayout.Space(15);
-
-        MaterialFolderString = EditorGUILayout.TextField("Location of Materials", MaterialFolderString);
-
-        if (GUILayout.Button("Assigns materials to selected fbx"))
-        {
-            AssignMaterial();
+            GUILayout.EndHorizontal();
         }
 
         GUILayout.Space(15);
 
+        //Material assignment and location button
+        {
+            //Textfield for setting the fold location for the materials
+            MaterialFolderString = EditorGUILayout.TextField("Location of Materials", MaterialFolderString);
+
+
+            if (GUILayout.Button("Assigns materials to selected fbx"))
+            {
+                AssignMaterial();
+            }
+
+        }
+
+        GUILayout.Space(15);
+
+        //Remove first and last letter buttons.
         GUILayout.BeginHorizontal();
-
-        FirstNLetter = EditorGUILayout.IntField("", FirstNLetter); 
-
-        if (GUILayout.Button("Remove First N Letter"))
         {
-            RemoveFirstNLetter();
+            FirstNLetter = EditorGUILayout.IntField("", FirstNLetter);
+
+            if (GUILayout.Button("Remove First N Letter"))
+            {
+                RemoveFirstNLetter();
+            }
+
+            LastNLetter = EditorGUILayout.IntField("", LastNLetter);
+
+            if (GUILayout.Button("Remove Last N Letter"))
+            {
+                RemoveLastNLetter();
+            }
         }
-
-        LastNLetter = EditorGUILayout.IntField("", LastNLetter);
-
-        if (GUILayout.Button("Remove Last N Letter"))
-        {
-            RemoveLastNLetter();
-        }
-
         GUILayout.EndHorizontal();
 
+        //Prefix and suffix buttons
         GUILayout.BeginHorizontal();
+        {
+            PrefixString = EditorGUILayout.TextField("", PrefixString);
 
-        PrefixString = EditorGUILayout.TextField("", PrefixString);
+            if (GUILayout.Button("Add Prefix"))
+            {
+                AddPrefix();
+            }
+
+            SuffixString = EditorGUILayout.TextField("", SuffixString);
+
+            if (GUILayout.Button("Add Suffix"))
+            {
+                AddSuffix();
+            }
+        }
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(15);
         
-        if (GUILayout.Button("Add Prefix"))
-        {
-            AddPrefix();
-        }
-
-        SuffixString = EditorGUILayout.TextField("", SuffixString);
-
-        if (GUILayout.Button("Add Suffix"))
-        {
-            AddSuffix();
-        }
-
-        GUILayout.EndHorizontal();
-
-        GUILayout.Space(15);
-
+        //Creats and assigns a convex hull to selected objects.
         if (GUILayout.Button("Assign Convex Hull"))
         {
             AssignConvexHull();
@@ -90,11 +101,13 @@ public class FBX_Tools : EditorWindow
 
         GUILayout.Space(15);
 
+        //assigns items to static settings.
         if (GUILayout.Button("Set As Static"))
         {
             SetAsStatic();
         }
 
+        //refresh the ONGUI screen
         Repaint();
     }
 
