@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -32,9 +33,9 @@ public class FBX_Tools : EditorWindow
             {
                 MaterialCreationModeNone();
             }
-
-            GUILayout.EndHorizontal();
         }
+        GUILayout.EndHorizontal();
+        
 
         GUILayout.Space(15);
 
@@ -107,22 +108,68 @@ public class FBX_Tools : EditorWindow
             SetAsStatic();
         }
 
+        if (GUILayout.Button("Rip Animation"))
+        {
+            Rip_Anim();
+        }
+
         //refresh the ONGUI screen
         Repaint();
     }
 
+    private void Rip_Anim()
+    {
+        foreach (Object obj in Selection.objects)
+        {
+            // Get the selected object
+            Object selectedObject = obj;
+            if (selectedObject == null) return;
+
+            string path = AssetDatabase.GetAssetPath(selectedObject);
+            string folder = Path.GetDirectoryName(path);
+            string fbxName = Path.GetFileNameWithoutExtension(path);
+
+            // Load all assets, specifically looking for AnimationClips (Type: AnimationClip)
+            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(path);
+            var clips = assets.OfType<AnimationClip>().ToArray();
+
+            if (clips.Length == 0)
+            {
+                Debug.LogWarning("No animation clips found in " + fbxName);
+                return;
+            }
+
+            foreach (var clip in clips)
+            {
+                // Skip humanoid avatar animations or default T-Poses if necessary
+                if (clip.name.StartsWith("__")) continue;
+
+                // Create a duplicate of the animation
+                AnimationClip newClip = new AnimationClip();
+                EditorUtility.CopySerialized(clip, newClip);
+
+                // Create new asset name based on FBX name
+                string newPath = $"{folder}/{fbxName}.anim";
+
+                // Save the asset
+                AssetDatabase.CreateAsset(newClip, AssetDatabase.GenerateUniqueAssetPath(newPath));
+                Debug.Log($"Exported: {newPath}");
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+    }
+
     private void AssignConvexHull()
     {
-        GameObject[] selectedObjects = Selection.gameObjects;
-
-        if (selectedObjects.Length == 0)
+        if (Selection.objects.Length == 0)
         {
             Debug.LogWarning("No objects selected.");
             return;
         }
 
         int count = 0;
-        foreach (GameObject obj in selectedObjects)
+        foreach (GameObject obj in Selection.gameObjects)
         {
             // Check if it's a prefab asset or an instance in the scene
             if (PrefabUtility.GetPrefabAssetType(obj) != PrefabAssetType.NotAPrefab || PrefabUtility.GetCorrespondingObjectFromSource(obj) != null)
@@ -143,7 +190,6 @@ public class FBX_Tools : EditorWindow
                     EditorUtility.SetDirty(obj);
                     // PrefabUtility.SavePrefabAsset(obj); // Optional: Save immediately
                 }
-
                 count++;
             }
         }
@@ -152,9 +198,13 @@ public class FBX_Tools : EditorWindow
 
     private void SetAsStatic()
     {
-        GameObject[] selectedObjects = Selection.gameObjects;
+        if (Selection.objects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
 
-        foreach (GameObject obj in selectedObjects)
+        foreach (GameObject obj in Selection.gameObjects)
         {
             // Define the flags (e.g., Everything, or custom bits)
             StaticEditorFlags flags = StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.BatchingStatic;
@@ -170,6 +220,12 @@ public class FBX_Tools : EditorWindow
 
     private void AssignMaterial()
     {
+        if (Selection.objects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
+
         // Find all GUIDs of Materials within the specified folder
         string[] materialGUIDs = Directory.GetFiles(MaterialFolderString, "*.mat", SearchOption.TopDirectoryOnly);
 
@@ -202,59 +258,78 @@ public class FBX_Tools : EditorWindow
 
     private void RemoveFirstNLetter()
     {
+        if (Selection.objects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
+
         // Iterate through all selected assets
         foreach (Object obj in Selection.objects)
         {
             string path = AssetDatabase.GetAssetPath(obj);
+            string fileName = Path.GetFileNameWithoutExtension(path);
 
-                string fileName = Path.GetFileNameWithoutExtension(path);
+            // Ensure name is long enough to have a first letter
+            if (fileName.Length > 1)
+            {
+                string newName = fileName.Substring(FirstNLetter);
+                string result = AssetDatabase.RenameAsset(path, newName);
 
-                // Ensure name is long enough to have a first letter
-                if (fileName.Length > 1)
+                if (string.IsNullOrEmpty(result))
                 {
-                    string newName = fileName.Substring(FirstNLetter);
-                    string result = AssetDatabase.RenameAsset(path, newName);
-
-                    if (string.IsNullOrEmpty(result))
-                    {
-                        Debug.Log($"Renamed {fileName} to {newName}");
-                    }
-                    else
-                    {
-                        Debug.LogError($"Error renaming {fileName}: {result}");
-                    }
+                    Debug.Log($"Renamed {fileName} to {newName}");
                 }
+                else
+                {
+                    Debug.LogError($"Error renaming {fileName}: {result}");
+                }
+            }
         }
     }
 
     private void RemoveLastNLetter()
     {
+        if (Selection.objects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
+
         foreach (Object obj in Selection.objects)
         {
             string path = AssetDatabase.GetAssetPath(obj);
+            string fileName = Path.GetFileNameWithoutExtension(path);
 
+            // Ensure name is long enough to have a first letter
+            if (fileName.Length > 1)
+            {
+                // REMOVE LAST LETTER HERE
+                string newName = fileName.Substring(0, fileName.Length - LastNLetter);
 
-                string fileName = Path.GetFileNameWithoutExtension(path);
+                // Rename the asset
+                string result = AssetDatabase.RenameAsset(path, newName);
 
-                // Ensure name is long enough to have a first letter
-                if (fileName.Length > 1)
+                if (string.IsNullOrEmpty(result))
                 {
-                    // REMOVE LAST LETTER HERE
-                    string newName = fileName.Substring(0, fileName.Length - LastNLetter);
-
-                    // Rename the asset
-                    string result = AssetDatabase.RenameAsset(path, newName);
-
-                    if (string.IsNullOrEmpty(result))
-                        Debug.Log("Renamed to: " + newName);
-                    else
-                        Debug.LogError("Rename failed: " + result);
+                    Debug.Log("Renamed to: " + newName);
                 }
+                else
+                {
+                    Debug.LogError("Rename failed: " + result);
+                }
+            }
         }
     }
 
     private void AddPrefix()
     {
+        if (Selection.gameObjects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
+
         // Iterate through selected objects in the Project window
         foreach (Object obj in Selection.objects)
         {
@@ -277,6 +352,12 @@ public class FBX_Tools : EditorWindow
 
     private void AddSuffix()
     {
+        if (Selection.gameObjects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
+
         // Iterate through selected objects in the Project window
         foreach (Object obj in Selection.objects)
         {
@@ -292,7 +373,6 @@ public class FBX_Tools : EditorWindow
             {
                 Debug.LogError("Error renaming: " + result);
             }
-            
         }
         AssetDatabase.SaveAssets();
         Debug.Log("Suffix addition complete.");
@@ -300,6 +380,12 @@ public class FBX_Tools : EditorWindow
 
     private void MaterialCreationModeNone()
     {
+        if (Selection.gameObjects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
+
         // Iterate through selected assets in the Project window
         foreach (Object obj in Selection.objects)
         {
@@ -316,7 +402,6 @@ public class FBX_Tools : EditorWindow
                 AssetDatabase.WriteImportSettingsIfDirty(path);
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
 
-
                 Debug.Log($"Updated: " + obj.name + " to Material Creation Mode: None");
             }
         }
@@ -324,6 +409,12 @@ public class FBX_Tools : EditorWindow
 
     private void MaterialCreationModeMaterialDescription()
     {
+        if (Selection.gameObjects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
+
         // Iterate through selected assets in the Project window
         foreach (Object obj in Selection.objects)
         {
@@ -339,7 +430,6 @@ public class FBX_Tools : EditorWindow
                 // Save and trigger reimport
                 AssetDatabase.WriteImportSettingsIfDirty(path);
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
-
 
                 Debug.Log($"Updated: " + obj.name + " to Material Creation Mode: Import via Material Description");
             }
