@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -113,8 +115,65 @@ public class FBX_Tools : EditorWindow
             Rip_Anim();
         }
 
+        GUILayout.Label("Remove Object From Prefab", EditorStyles.boldLabel);
+
+        objectNameToRemove = EditorGUILayout.TextField("Object Name to Remove", objectNameToRemove);
+
+        GUILayout.Space(10);
+
+        if (GUILayout.Button("Remove Object"))
+        {
+            RemoveObjectFromPrefab();
+        }
+
         //refresh the ONGUI screen
         Repaint();
+    }
+
+    private string objectNameToRemove = "Enter Name Here";
+
+    private void RemoveObjectFromPrefab()
+    {
+        if (Selection.objects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected.");
+            return;
+        }
+
+        foreach (Object GOobj in Selection.objects)
+        {
+            // 1. Open the prefab contents in memory
+            string prefabPath = AssetDatabase.GetAssetPath(GOobj);
+            GameObject rootInstance = PrefabUtility.LoadPrefabContents(prefabPath);
+
+            // 2. Find and destroy objects containing the string
+            int removedCount = 0;
+            Transform[] allChildren = rootInstance.GetComponentsInChildren<Transform>(true);
+
+            foreach (Transform child in allChildren)
+            {
+                if (child.gameObject.name.Contains(objectNameToRemove))
+                {
+                    // Destroy child immediately in editor mode
+                    DestroyImmediate(child.gameObject);
+                    removedCount++;
+                }
+            }
+
+            if (removedCount > 0)
+            {
+                // 3. Save changes back to the original Prefab Asset
+                PrefabUtility.SaveAsPrefabAsset(rootInstance, prefabPath);
+                Debug.Log($"Successfully removed {removedCount} objects containing '{objectNameToRemove}' from {GOobj.name}.");
+            }
+            else
+            {
+                Debug.Log($"No objects found containing '{objectNameToRemove}'.");
+            }
+
+            // 4. Unload the prefab contents to prevent memory leaks
+            PrefabUtility.UnloadPrefabContents(rootInstance);
+        }
     }
 
     private void Rip_Anim()
