@@ -1,3 +1,4 @@
+using Codice.Client.BaseCommands.LayoutFilters;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,8 @@ public class FBX_Tools : EditorWindow
     private string PrefixString;
 
     private string MaterialFolderString = "Assets/Hivemind/MedievalFantasyVillage/Art";
+
+    private string objectNameToRemove = "Enter Name Here";
 
     [MenuItem("Tools/FBX_Tools")]
     public static void ShowWindow()
@@ -126,11 +129,104 @@ public class FBX_Tools : EditorWindow
             RemoveObjectFromPrefab();
         }
 
+        if (GUILayout.Button("Remove all Colliders"))
+        {
+            RemoveAllColliders();
+        }
+
+        if (GUILayout.Button("Add Mesh Collider"))
+        {
+            AddMeshColldier();
+        }
+
         //refresh the ONGUI screen
         Repaint();
     }
 
-    private string objectNameToRemove = "Enter Name Here";
+    private void AddMeshColldier()
+    {
+        if (Selection.objects.Length == 0)
+        {
+            Debug.LogWarning("No objects selected. Please select at least one GameObject.");
+            return;
+        }
+
+        int count = 0;
+
+        foreach (Object obj in Selection.objects)
+        {
+            // Optional: Process children if you want to add colliders to the whole hierarchy 
+            // of the prefab instead of just the root.
+            MeshFilter[] meshFilters = obj.GetComponentsInChildren<MeshFilter>();
+
+            foreach (MeshFilter mf in meshFilters)
+            {
+                // Avoid adding a collider if one already exists
+                if (mf.GetComponent<MeshCollider>() == null)
+                {
+                    MeshCollider meshCollider = mf.gameObject.AddComponent<MeshCollider>();
+
+                    // The sharedMesh must be assigned for it to bake accurately
+                    meshCollider.sharedMesh = mf.sharedMesh;
+
+                    // Mark prefab stage as dirty so Unity saves the change
+                    EditorUtility.SetDirty(mf.gameObject);
+                    count++;
+                }
+            }
+        }
+
+        Debug.Log($"Successfully added Mesh Colliders to {count} objects.");
+    }
+
+    private void RemoveAllColliders()
+    {
+        if (Selection.objects.Length == 0)
+        {
+            Debug.LogWarning("No prefabs selected. Please select at least one prefab in the Project view.");
+            return;
+        }
+
+        int colliderCount = 0;
+        int prefabCount = 0;
+
+        foreach (Object obj in Selection.objects)
+        {
+            string path = AssetDatabase.GetAssetPath(obj);
+
+            // Ensure it's actually a valid prefab asset
+            if (PrefabUtility.GetPrefabAssetType(obj) == PrefabAssetType.NotAPrefab) continue;
+
+            // Load the prefab as a GameObject
+            GameObject prefabRoot = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefabRoot == null) continue;
+
+            // Find all colliders, including children
+            Collider[] colliders = prefabRoot.GetComponentsInChildren<Collider>(true);
+            Collider2D[] colliders2D = prefabRoot.GetComponentsInChildren<Collider2D>(true);
+
+            if (colliders.Length > 0 || colliders2D.Length > 0)
+            {
+                // Delete 3D Colliders
+                foreach (Collider col in colliders)
+                {
+                    Undo.DestroyObjectImmediate(col);
+                    colliderCount++;
+                }
+
+                // Delete 2D Colliders
+                foreach (Collider2D col2d in colliders2D)
+                {
+                    Undo.DestroyObjectImmediate(col2d);
+                    colliderCount++;
+                }
+
+                prefabCount++;
+            }
+        }
+
+        Debug.Log($"Successfully removed {colliderCount} colliders across {prefabCount} prefab(s).");
+    }
 
     private void RemoveObjectFromPrefab()
     {
