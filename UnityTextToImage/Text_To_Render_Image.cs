@@ -13,6 +13,7 @@ public class Text_To_RenderImage_Script : EditorWindow
     private string PreviewCameraName = "Preview_Camera";
     private int PreviewCameraDepth = -1;
     private Color BackGroundColor = Color.black;
+    private string previewCameraTag = "MainCamera";
 
     private string PreviousScenePath;
     private Scene PreviousScene;
@@ -24,8 +25,6 @@ public class Text_To_RenderImage_Script : EditorWindow
     private int RenderTexturetWidth = 1024;
     private int RenderTextureHeight = 1024;
     private int RenderTextureDepth = 24;
-
-    private string ImageName = "Filename";
 
     private GameObject Straight_RenderCanvasGameObject;
     private Canvas Straight_RenderCanvas;
@@ -40,42 +39,47 @@ public class Text_To_RenderImage_Script : EditorWindow
     private int SelectedAlignemntIndex = 1;
     private string[] AlignmentOptions = new string[] {"Left", "Center", "Right"};
 
-    private bool CirculizeText = true;
+    private bool CirculizeText = false;
 
     private TextProOnACircle Top_CirculizeTextScript;
-
     private GameObject Top_RenderCanvasGameObject;
     private Canvas Top_RenderCanvas;
     private string Top_RenderCanvasName = "Top_Circle_Canvas";
 
     private TextMeshProUGUI Top_RenderText;
     private Color Top_RenderTextColor = Color.white;
-    private float Top_RenderTextFontSize = 200;
+    private float Top_RenderTextFontSize = 100;
     private string Top_RenderTextInput = "Top Text";
 
-    private float Top_tmpC_Radius = 270;
-    private float Top_tmpC_Arc_Degrees = 100;
+    private float Top_tmpC_Radius = 360;
+    private float Top_tmpC_Arc_Degrees = 102;
     private float Top_tmpC_Angular_Offset = -90;
 
     private TextProOnACircle Bottom_CirculizeTextScript;
-
     private GameObject Bottom_RenderCanvasGameObject;
     private Canvas Bottom_RenderCanvas;
     private string Bottom_RenderCanvasName = "Bottom_Circle_Canvas";
 
     private TextMeshProUGUI Bottom_RenderText;
     private Color Bottom_RenderTextColor = Color.white;
-    private float Bottom_RenderTextFontSize = 200;
+    private float Bottom_RenderTextFontSize = 100;
     private string Bottom_RenderTextInput = "Bottom Text";
 
-    private float Bottom_tmpC_Radius = -270;
-    private float Bottom_tmpC_Arc_Degrees = -100;
+    private float Bottom_tmpC_Radius = -360;
+    private float Bottom_tmpC_Arc_Degrees = -120;
     private float Bottom_tmpC_Angular_Offset = -90;
+
+    private string ImageName = "Filename";
 
     private Texture2D RenderPNGImage;
     private byte[] Bytes;
     private string ProjectPath;
 
+    
+    private TMP_SpriteAsset Top_SpriteAsset;
+    private byte[] bytes;
+    private string projectPath;
+    
     [MenuItem("Tools/Text_To_Image")]
     public static void ShowWindow()
     {
@@ -145,6 +149,8 @@ public class Text_To_RenderImage_Script : EditorWindow
         {
             CreateCanvasObjectCircle();
         }
+
+        projectPath = Application.dataPath;
     }
 
     void CreateCanvasObjectCircle()
@@ -234,8 +240,6 @@ public class Text_To_RenderImage_Script : EditorWindow
                     Straight_RenderText.alignment = Straight_RenderTextAlignment;
                     break;
             }
-
-            Repaint();
         }
         else
         {
@@ -276,17 +280,41 @@ public class Text_To_RenderImage_Script : EditorWindow
             Bottom_CirculizeTextScript.m_radius = Bottom_tmpC_Radius;
             Bottom_CirculizeTextScript.m_arcDegrees = Bottom_tmpC_Arc_Degrees;
             Bottom_CirculizeTextScript.m_angularOffset = Bottom_tmpC_Angular_Offset;
-
-            Repaint();
         }
 
         GUILayout.Space(20);
 
         if (GUILayout.Button("Render The Image"))
         {
-            RenderImage();
+            string fileCheck = projectPath + "/" + imageName + ".png";
+
+            if (File.Exists(fileCheck))
+            {
+                bool result = EditorUtility.Display("Warning", "The Image Exists, \n Do you want to overwrite it?", "Yes", "No");
+                if (resulte == true)
+                {
+                    RenderImage();
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                RenderImage();
+            }
         }
 
+        if (GUI.changed())
+        {
+            Repaint();
+        }
+
+        EditorGUILayout.BeginHorizontal():
+        EditorGUILayout.LabelFileld("Project Path:", GUILayout.Width(100));
+        EditorGUILayout.SelectLabel(Application.dataPath);
+        EditorGUILayout.EndHorizontal();
         //updateHDCamBG()
     }
 
