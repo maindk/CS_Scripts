@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.XR;
 
 public class FBX_Tools : EditorWindow
 {
@@ -38,7 +40,7 @@ public class FBX_Tools : EditorWindow
             }
         }
         GUILayout.EndHorizontal();
-        
+
 
         GUILayout.Space(15);
 
@@ -96,7 +98,7 @@ public class FBX_Tools : EditorWindow
         GUILayout.EndHorizontal();
 
         GUILayout.Space(15);
-        
+
         //Creats and assigns a convex hull to selected objects.
         if (GUILayout.Button("Assign Convex Hull"))
         {
@@ -137,8 +139,78 @@ public class FBX_Tools : EditorWindow
             AddMeshColldier();
         }
 
+        if (GUILayout.Button("Check UV out of bounds"))
+        {
+            CheckSelectedMeshUVsLightmap();
+        }
+
+
+        GUILayout.Label("UV Overlap Checker", EditorStyles.boldLabel);
+
+
+
         //refresh the ONGUI screen
         Repaint();
+    }
+
+
+
+
+    private void CheckSelectedMeshUVsLightmap()
+    {
+        Object selectedObj = Selection.activeObject;
+
+        if (selectedObj == null)
+        {
+            Debug.LogWarning("No object selected. Please select an FBX file in the Project window.");
+            return;
+        }
+
+        // Get the path of the selected asset
+        string path = AssetDatabase.GetAssetPath(selectedObj);
+
+        // Load all assets at the path to find the actual Mesh (FBXs often contain nested assets)
+        Object[] assets = AssetDatabase.LoadAllAssetRepresentationsAtPath(path);
+
+        bool foundAnyErrors = false;
+
+        foreach (Object asset in assets)
+        {
+            if (asset is Mesh mesh)
+            {
+                List<Vector2> uvs = new List<Vector2>();
+                mesh.GetUVs(1, uvs); // Check primary UVs (UV0)
+
+                if (uvs == null || uvs.Count == 0) continue;
+
+                int outOfBoundsCount = 0;
+
+                foreach (Vector2 uv in uvs)
+                {
+                    // Check if the UV coordinate is completely outside the [0, 1] range
+                    if (uv.x < 0f || uv.x > 1f || uv.y < 0f || uv.y > 1f)
+                    {
+                        outOfBoundsCount++;
+                    }
+                }
+
+                if (outOfBoundsCount > 0)
+                {
+                    Debug.LogError($"Mesh '{mesh.name}' has {outOfBoundsCount} out-of-bounds Light map coordinates out of {uvs.Count} total vertices.");
+                    foundAnyErrors = true;
+                }
+                else
+                {
+                    Debug.Log($"Mesh '{mesh.name}' is fully within the [0,1] UV lightmap space.");
+                }
+            }
+        }
+
+        if (!foundAnyErrors)
+        {
+            Debug.Log("Check complete. No out-of-bounds lightmap UVs found in the selected FBX.");
+        }
+
     }
 
     private void AddMeshColldier()
