@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.XR;
 
 public class FBX_Tools : EditorWindow
 {
@@ -147,14 +147,194 @@ public class FBX_Tools : EditorWindow
 
         GUILayout.Label("UV Overlap Checker", EditorStyles.boldLabel);
 
+        if (GUILayout.Button("Scene ScreenShot"))
+        {
+            screenShot();
+        }
 
+        if (GUILayout.Button("Object Screenshot"))
+        {
+            object_Screenshot();
+        }
 
         //refresh the ONGUI screen
         Repaint();
     }
+    private void screenShot()
+    {
+            // 1. Get the last active Unity Scene View window
+            SceneView activeSceneView = SceneView.lastActiveSceneView;
+            if (activeSceneView == null)
+            {
+                Debug.LogError("No active Scene View found. Click inside the Scene window and try again.");
+                return;
+            }
+
+            // 2. Fetch the active camera and window dimensions
+            Camera sceneCam = activeSceneView.camera;
+            int width = (int)activeSceneView.position.width;
+            int height = (int)activeSceneView.position.height;
+
+            if (sceneCam == null || width <= 0 || height <= 0)
+            {
+                Debug.LogError("Failed to retrieve valid Scene View Camera boundaries.");
+                return;
+            }
+
+            // 3. Set up a temporary RenderTexture matching the resolution
+            RenderTexture rt = new RenderTexture(width, height, 24);
+            RenderTexture previousActiveRt = RenderTexture.active;
+            RenderTexture previousTargetTexture = sceneCam.targetTexture;
+
+            sceneCam.targetTexture = rt;
+            RenderTexture.active = rt;
+
+            // 4. Force the camera to render its current view manually
+            sceneCam.Render();
+
+            // 5. Read the pixels from the buffer into a Texture2D
+            Texture2D snapshot = new Texture2D(width, height, TextureFormat.RGB24, false);
+            snapshot.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            snapshot.Apply();
+
+            // 6. Reset textures back to their original states to avoid breaking the editor
+            sceneCam.targetTexture = previousTargetTexture;
+            RenderTexture.active = previousActiveRt;
+            Object.DestroyImmediate(rt);
+
+            // 7. Encode the texture and write it out as a PNG file
+            byte[] bytes = snapshot.EncodeToPNG();
+            Object.DestroyImmediate(snapshot);
+
+            string folderPath = Path.Combine(Application.dataPath, "Snapshots");
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string fileName = $"Snapshot_{System.DateTime.Now:yyyyMMdd_HHmmss}.png";
+            string fullPath = Path.Combine(folderPath, fileName);
+
+            File.WriteAllBytes(fullPath, bytes);
+
+            // 8. Refresh the Asset Database so the image immediately shows up in your project
+            AssetDatabase.Refresh();
+
+            Debug.Log($"Scene view snapshot saved successfully to: Assets/Snapshots/{fileName}");
+    }
+
+    private async void object_Screenshot()
+    {
+        Object selectedObj = Selection.activeObject;
+
+        if (selectedObj == null)
+        {
+            Debug.LogWarning("No object selected. Please select an prefab file in the Project window.");
+            return;
+        }
+
+        // Instantiate as a prefab instance in the scene
+        GameObject spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(selectedObj);
+
+        // Optional: Spawn at origin, or snap to scene view camera center
+        if (SceneView.lastActiveSceneView != null)
+        {
+            spawnedObject.transform.position = Vector3.zero;
+        }
+        else
+        {
+            spawnedObject.transform.position = SceneView.lastActiveSceneView.pivot;
+        }
+
+        // Register the creation for Undo functionality
+        Undo.RegisterCreatedObjectUndo(spawnedObject, "Spawn Prefab");
+
+        // Select the new object in the hierarchy
+        Selection.activeGameObject = spawnedObject;
+
+        SceneView.FrameLastActiveSceneView();
+
+        Transform targetTransform = Selection.activeTransform;
+
+        // Check if any object is selected
+        if (Selection.transforms.Length == 0)
+        {
+            Debug.LogWarning("No objects selected to rotate.");
+            return;
+        }
+
+        float degreesToRotate = 90;
+        int totalRotations = 3;
+
+        for (int i = 0; i < totalRotations; i++)
+        {
+            // 1. Get the last active Unity Scene View window
+            SceneView activeSceneView = SceneView.lastActiveSceneView;
+            if (activeSceneView == null)
+            {
+                Debug.LogError("No active Scene View found. Click inside the Scene window and try again.");
+                return;
+            }
+
+            // 2. Fetch the active camera and window dimensions
+            Camera sceneCam = activeSceneView.camera;
+            int width = (int)activeSceneView.position.width;
+            int height = (int)activeSceneView.position.height;
+
+            if (sceneCam == null || width <= 0 || height <= 0)
+            {
+                Debug.LogError("Failed to retrieve valid Scene View Camera boundaries.");
+                return;
+            }
+
+            // 3. Set up a temporary RenderTexture matching the resolution
+            RenderTexture rt = new RenderTexture(width, height, 24);
+            RenderTexture previousActiveRt = RenderTexture.active;
+            RenderTexture previousTargetTexture = sceneCam.targetTexture;
+
+            sceneCam.targetTexture = rt;
+            RenderTexture.active = rt;
+
+            // 4. Force the camera to render its current view manually
+            sceneCam.Render();
+
+            // 5. Read the pixels from the buffer into a Texture2D
+            Texture2D snapshot = new Texture2D(width, height, TextureFormat.RGB24, false);
+            snapshot.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            snapshot.Apply();
+
+            // 6. Reset textures back to their original states to avoid breaking the editor
+            sceneCam.targetTexture = previousTargetTexture;
+            RenderTexture.active = previousActiveRt;
+            Object.DestroyImmediate(rt);
+
+            // 7. Encode the texture and write it out as a PNG file
+            byte[] bytes = snapshot.EncodeToPNG();
+            Object.DestroyImmediate(snapshot);
+
+            string folderPath = Path.Combine(Application.dataPath, "Snapshots");
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string fileName = $"Snapshot_{System.DateTime.Now:yyyyMMdd_HHmmss}.png";
+            string fullPath = Path.Combine(folderPath, fileName);
+
+            File.WriteAllBytes(fullPath, bytes);
+
+            // 8. Refresh the Asset Database so the image immediately shows up in your project
+            AssetDatabase.Refresh();
+
+            Debug.Log($"Scene view snapshot saved successfully to: Assets/Snapshots/{fileName}");
 
 
+            targetTransform.Rotate(Vector3.up, degreesToRotate, Space.Self);
+            await Task.Delay(1000);
+        }
 
+        Undo.DestroyObjectImmediate(spawnedObject);
+    }
 
     private void CheckSelectedMeshUVsLightmap()
     {
