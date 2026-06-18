@@ -160,6 +160,37 @@ public class FBX_Tools : EditorWindow
         //refresh the ONGUI screen
         Repaint();
     }
+
+    private void AssignMaterialsRemap()
+    {
+        if (Selection.objects.Length == 0)
+        {
+            Debgu.log("No Object is selected");
+            return;
+        }
+
+        foreach (Object obj in Selection.objects)
+        {
+            string[] guids = Selection.assetGUIDs;
+            int processCount = 0;
+
+            foreach (string guid in guids)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                AssetImporter assetImporter = AssetImporter.GetAtPath(assetPath);
+
+                if (assetImporter is ModelIMporter modelImporter)
+                {
+                    modelImporer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
+                    modelImporter.SearchAndRemapMaterials(ModelImporterMaterialName.BaseOnMaterialName, ModelImporterMaterialSearch.Everywhere);
+                    modelImporter.SaveAndReimport();
+                    processCount++;
+                }
+            }
+            Debug.Log("Successfully remapped and reimported {processCount} models");
+        }
+    }
+    
     private void screenShot()
     {
             // 1. Get the last active Unity Scene View window
